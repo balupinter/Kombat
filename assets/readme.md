@@ -1,0 +1,1 @@
+This folder should contain all the assets for the game, including images, sounds, and any other media.
