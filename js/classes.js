@@ -4,41 +4,70 @@ class Sprite {
     imageSrc,
     scale = 1,
     framesMax = 1,
-    offset = { x: 0, y: 0 }
+    offset = { x: 0, y: 0 },
+    color = 'magenta'
   }) {
     // TODO: Initialize the sprite's properties.
     // - this.position: The sprite's position on the canvas {x, y}.
-    // - this.image: A new Image() object.
-    // - this.image.src: The path to the sprite's image.
+    this.position = position;
+    this.image = imageSrc ? new Image() : null;
+    if (this.image) this.image.src = imageSrc;
     // - this.scale: The scale of the sprite.
+    this.scale = scale;
     // - this.framesMax: The total number of frames in the sprite sheet.
+    this.framesMax = framesMax;
     // - this.framesCurrent: The current frame being displayed.
+    this.framesCurrent = 0;
     // - this.framesElapsed: The number of frames that have passed.
+    this.framesElapsed = 0;
     // - this.framesHold: The number of frames to wait before switching to the next frame.
+    this.framesHold = 10;
     // - this.offset: An offset for positioning the sprite.
-  }
+    this.offset = offset;
+    this.velocity = { x: 0, y: 0 }; // Ensure velocity exists for gravity
+    this.color = color;
+    this.width = 50;
+    this.height = 150;
 
-  draw() {
-    // TODO: Draw the sprite on the canvas.
-    // - Use c.drawImage() to draw the sprite.
-    // - The first argument is the image to draw.
-    // - The next four arguments are for clipping the sprite sheet (sx, sy, sWidth, sHeight).
-    // - The last four arguments are for positioning and scaling the sprite on the canvas (dx, dy, dWidth, dHeight).
+    if (this.image) {
+      this.image.onload = () => {
+        this.draw();
+      };
+    }
   }
-
   animateFrames() {
-    // TODO: Animate the sprite.
-    // - Increment this.framesElapsed.
-    // - If this.framesElapsed % this.framesHold === 0, then it's time to switch frames.
-    // - If this.framesCurrent is less than this.framesMax - 1, increment it.
-    // - Otherwise, reset this.framesCurrent to 0.
+    this.framesElapsed++;
+    if (this.framesElapsed % this.framesHold === 0) {
+      if (this.framesCurrent < this.framesMax - 1) {
+        this.framesCurrent++;
+      } else {
+        this.framesCurrent = 0;
+      }
+    }
   }
 
   update() {
-    // TODO: Update the sprite.
-    // - Call this.draw() to draw the sprite.
-    // - Call this.animateFrames() to animate the sprite.
+    this.draw();
+    this.animateFrames();
+
+    // Gravity and floor collision
+    const floorY = 476; // 576 (canvas height) - 100 (floor height)
+    if (this.position.y + this.height < floorY) {
+      this.position.y += this.velocity.y;
+      this.velocity.y += 0.7; // gravity
+    } else {
+      this.velocity.y = 0;
+      this.position.y = floorY - this.height; // stand on floor
+    }
+
+    this.position.x += this.velocity.x;
   }
+  draw() {
+    // Always draw colored square for fighters
+    c.fillStyle = this.color || 'magenta';
+    c.fillRect(this.position.x, this.position.y, this.width, this.height);
+  }
+
 }
 
 class Fighter extends Sprite {
@@ -51,52 +80,55 @@ class Fighter extends Sprite {
     framesMax = 1,
     offset = { x: 0, y: 0 },
     sprites,
-    attackBox = { offset: {}, width: undefined, height: undefined }
+    attackBox = { offset: {}, width: 50, height: 50 }
   }) {
     super({
       position,
       imageSrc,
       scale,
       framesMax,
-      offset
-    })
-
-    // TODO: Initialize the fighter's properties.
-    // - this.velocity: The fighter's velocity {x, y}.
-    // - this.width: The fighter's width.
-    // - this.height: The fighter's height.
-    // - this.lastKey: The last key pressed by the player.
-    // - this.attackBox: An object that defines the fighter's attack box.
-    // - this.isAttacking: A boolean to track if the fighter is attacking.
-    // - this.health: The fighter's health.
-    // - this.sprites: An object that holds all of the fighter's sprites (idle, run, jump, etc.).
+      offset,
+      color
+    });
+    this.velocity = velocity;
+    this.width = 50;
+    this.height = 150;
+    this.lastKey = '';
+    this.attackBox = {
+      position: {
+        x: this.position.x,
+        y: this.position.y
+      },
+      offset: attackBox.offset,
+      width: attackBox.width,
+      height: attackBox.height
+    };
+    this.isAttacking = false;
+    this.health = 100;
+    this.sprites = sprites;
   }
 
   update() {
-    // TODO: Update the fighter.
-    // - Call this.draw() to draw the fighter.
-    // - Update the fighter's position based on its velocity.
-    // - Apply gravity to the fighter's y velocity.
-    // - Prevent the fighter from falling through the bottom of the canvas.
+    super.update(); // This draws and animates the fighter
+    // Add any fighter-specific logic here
   }
 
-  attack() {
-    // TODO: Make the fighter attack.
-    // - Set this.isAttacking to true.
-    // - Switch the sprite to the attack animation.
-  }
-
-  takeDamage(damage) {
-    // TODO: Reduce the fighter's health.
-    // - Subtract the damage from the fighter's health.
-    // - If the fighter's health is less than or equal to 0, switch to the death animation.
-    // - Otherwise, switch to the take hit animation.
-  }
-
-  switchSprite(sprite) {
-    // TODO: Switch the fighter's sprite.
-    // - Check which sprite is being requested (e.g., 'idle', 'run', 'jump').
-    // - Set this.image to the corresponding sprite image.
-    // - Set this.framesMax to the number of frames in the new sprite.
-  }
+ 
 }
+
+function animate() {
+  requestAnimationFrame(animate);
+  c.clearRect(0, 0, canvas.width, canvas.height);
+  fighter.update();
+}
+animate();
+
+
+function animate() {
+  requestAnimationFrame(animate);
+  c.clearRect(0, 0, canvas.width, canvas.height);
+  fighter.update();
+}
+animate();
+
+
